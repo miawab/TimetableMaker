@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-display: 'Space Grotesk', 'Inter', sans-serif;
+    --bg-base: #06060a;
+    --bg-card: #0e0e18;
+    --bg-raised: #13131f;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.12);
+  }
+
+  * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-base);
+    color: #e2e8f0;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  input, select, textarea, button { font-family: var(--font-sans); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+}
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .bg-card { background-color: var(--bg-card); }
+  .bg-raised { background-color: var(--bg-raised); }
+  .border-subtle { border-color: var(--border); }
+  .border-strong { border-color: var(--border-strong); }
+}
