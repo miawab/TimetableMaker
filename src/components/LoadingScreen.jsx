@@ -90,6 +90,15 @@ export default function LoadingScreen({ onNavigate, onEnter }) {
             <p className="text-white/15 text-[10px] tracking-widest uppercase">
               Right-click canvas to scatter
             </p>
+
+            <a
+              href="https://www.linkedin.com/in/ibrahim-awab-743a2a325/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/20 text-[10px] hover:text-white/50 transition-colors duration-200 tracking-wide"
+            >
+              Built by Ibrahim Awab ↗
+            </a>
           </motion.div>
         </motion.div>
       )}
