@@ -57,7 +57,7 @@ export default function ImportPage() {
         <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">Import</p>
         <h2 className="font-display text-3xl font-semibold text-white mb-1">Load Existing Timetable</h2>
         <p className="text-slate-500 text-sm mb-10">
-          Upload a <code className="text-slate-400 bg-white/[0.06] px-1 py-0.5 rounded text-xs">.json</code> export from this app, or an <code className="text-slate-400 bg-white/[0.06] px-1 py-0.5 rounded text-xs">.xlsx</code> file in NUST-style timetable format.
+          A <code className="text-slate-400 bg-white/[0.06] px-1 py-0.5 rounded text-xs">.json</code> export from this app restores everything — structure, rooms, teachers, and any manual edits. An <code className="text-slate-400 bg-white/[0.06] px-1 py-0.5 rounded text-xs">.xlsx</code> loads timetable data only; you'd need to re-enter rooms and structure if you want to regenerate.
         </p>
 
         <div

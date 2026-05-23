@@ -5,7 +5,7 @@ import { LogoCube } from '@/components/ui/icon-3d-hover'
 
 const WORDS = ["TIMETABLE", "MAKER", "SCHEDULE", "NO CLASHES", "EXPORT"]
 
-export default function LoadingScreen({ onEnter }) {
+export default function LoadingScreen({ onNavigate, onEnter }) {
   const [showUI, setShowUI] = useState(false)
   const [leaving, setLeaving] = useState(false)
 
@@ -15,6 +15,7 @@ export default function LoadingScreen({ onEnter }) {
   }, [])
 
   function handleEnter() {
+    onNavigate?.()          // navigate immediately so the correct page renders behind the fade
     setLeaving(true)
     setTimeout(onEnter, 500)
   }

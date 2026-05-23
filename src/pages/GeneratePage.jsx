@@ -20,6 +20,7 @@ export default function GeneratePage() {
   const config = useAppStore((s) => s.config)
   const years = useAppStore((s) => s.years)
   const rooms = useAppStore((s) => s.rooms)
+  const teachers = useAppStore((s) => s.teachers)
   const setTimetable = useAppStore((s) => s.setTimetable)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -47,7 +48,7 @@ export default function GeneratePage() {
     setTimeout(() => {
       clearInterval(interval)
       try {
-        const { timetable, errors } = generateTimetable(config, years, rooms)
+        const { timetable, errors } = generateTimetable(config, years, rooms, teachers)
         setTimetable(timetable)
         setProgress(100)
         setResult({ errors, success: errors.length === 0 })

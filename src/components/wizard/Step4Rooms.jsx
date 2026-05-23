@@ -22,10 +22,10 @@ export default function Step4Rooms({ onNext, onBack }) {
 
   return (
     <div>
-      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">Step 4</p>
+      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">Step 5</p>
       <h2 className="font-display text-3xl font-semibold text-white mb-1">Rooms</h2>
       <p className="text-slate-500 text-sm mb-8">
-        List all available rooms. Labs will only be assigned to lab-type courses. Lecture halls can hold any lecture.
+        Room names appear exactly as typed on the timetable, so use the names you'd actually print. Classrooms and lecture halls are interchangeable for scheduling — the only hard distinction is Lab, which is reserved exclusively for lab courses. Add at least one Lab room if you have any lab courses, or they'll fail to schedule.
       </p>
 
       <div className="bg-[#0e0e18] rounded-2xl border border-white/[0.07] overflow-hidden">

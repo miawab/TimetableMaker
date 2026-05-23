@@ -85,10 +85,10 @@ export default function Step5Pairings({ onBack }) {
 
   return (
     <div>
-      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">Step 5</p>
+      <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">Step 6</p>
       <h2 className="font-display text-3xl font-semibold text-white mb-1">Room–Course Pairings</h2>
       <p className="text-slate-500 text-sm mb-8">
-        Optional. Click a course to assign specific rooms. Without a pairing, the generator uses any compatible room.
+        Optional — safe to skip if room assignment doesn't matter. Useful when a course needs a specific room, like a dedicated computer lab. Restricted locks the course to only the rooms you check; Free ignores any selections and lets the generator pick automatically.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

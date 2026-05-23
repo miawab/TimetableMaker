@@ -17,6 +17,7 @@ const initialState = {
   config: DEFAULT_CONFIG,
   years: [],
   rooms: [],
+  teachers: [],
   timetable: null,
   wizardStep: 0,
 }
@@ -108,6 +109,12 @@ const storeSlice = (set, get) => ({
           : y
       ),
     })),
+
+  // Teachers
+  addTeacher: (teacher) => set((s) => ({ teachers: [...s.teachers, teacher] })),
+  updateTeacher: (id, updates) =>
+    set((s) => ({ teachers: s.teachers.map((t) => (t.id === id ? { ...t, ...updates } : t)) })),
+  removeTeacher: (id) => set((s) => ({ teachers: s.teachers.filter((t) => t.id !== id) })),
 
   // Rooms
   addRoom: (room) => set((s) => ({ rooms: [...s.rooms, room] })),

@@ -2,12 +2,13 @@ import { useAppStore } from '../../store/useAppStore'
 import Step1Institution from './Step1Institution'
 import Step2TimeConfig from './Step2TimeConfig'
 import Step3AcademicStructure from './Step3AcademicStructure'
+import Step4Teachers from './Step4Teachers'
 import Step4Rooms from './Step4Rooms'
 import Step5Pairings from './Step5Pairings'
 import { LogoCube } from '../ui/icon-3d-hover'
 
-const STEPS = ['Institution', 'Time', 'Structure', 'Rooms', 'Pairings']
-const COMPONENTS = [Step1Institution, Step2TimeConfig, Step3AcademicStructure, Step4Rooms, Step5Pairings]
+const STEPS = ['Institution', 'Time', 'Structure', 'Teachers', 'Rooms', 'Pairings']
+const COMPONENTS = [Step1Institution, Step2TimeConfig, Step3AcademicStructure, Step4Teachers, Step4Rooms, Step5Pairings]
 
 export default function WizardShell() {
   const wizardStep = useAppStore((s) => s.wizardStep)

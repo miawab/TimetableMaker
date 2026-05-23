@@ -1,6 +1,6 @@
 import { computeSlots } from './timeSlots'
 
-export function generateTimetable(config, years, rooms) {
+export function generateTimetable(config, years, rooms, teachers = []) {
   const slots = computeSlots(config)
   const days = config.workingDays
   const dept = config.department || 'DEPT'
@@ -12,6 +12,12 @@ export function generateTimetable(config, years, rooms) {
   const roomOccupancy = {} // key: `${day}|${slotId}|${roomId}`
   // Map of (day, slotId, dept, major, yearLabel, section) -> true, for section clash
   const sectionOccupancy = {} // key: `${day}|${slotId}|${major}|${yearLabel}|${section}`
+  // Map of (day, slotId, teacherId) -> true, for teacher clash detection
+  const teacherOccupancy = {} // key: `${day}|${slotId}|${teacherId}`
+
+  // Quick lookup: teacherId -> teacher name
+  const teacherMap = {}
+  for (const t of teachers) { teacherMap[t.id] = t.name }
 
   // Pre-build empty structure
   for (const year of years) {
@@ -49,6 +55,7 @@ export function generateTimetable(config, years, rooms) {
                 allowedRooms: course.allowedRooms || [],
                 roomConstraint: course.roomConstraint || 'free',
                 creditHours: course.creditHours,
+                teacherId: course.teacherId || null,
               })
             } else {
               // One unit per credit hour, placed on separate days
@@ -64,6 +71,7 @@ export function generateTimetable(config, years, rooms) {
                   roomConstraint: course.roomConstraint || 'free',
                   creditHours: course.creditHours,
                   unitIndex: i,
+                  teacherId: course.teacherId || null,
                 })
               }
             }
@@ -103,6 +111,14 @@ export function generateTimetable(config, years, rooms) {
   function isSectionFree(day, slotId, majorName, yearLabel, section) {
     return !sectionOccupancy[`${day}|${slotId}|${majorName}|${yearLabel}|${section}`]
   }
+  function occupyTeacher(day, slotId, teacherId) {
+    if (!teacherId) return
+    teacherOccupancy[`${day}|${slotId}|${teacherId}`] = true
+  }
+  function isTeacherFree(day, slotId, teacherId) {
+    if (!teacherId) return true
+    return !teacherOccupancy[`${day}|${slotId}|${teacherId}`]
+  }
 
   // Track which days each lecture course-section has been placed on (spread constraint)
   const lectureDaysUsed = {} // key: `${course}|${majorName}|${yearLabel}|${section}`
@@ -134,15 +150,18 @@ export function generateTimetable(config, years, rooms) {
             for (const slot of block) {
               if (!isRoomFree(day, slot.id, room.id)) { canPlace = false; break }
               if (!isSectionFree(day, slot.id, unit.majorName, unit.yearLabel, unit.section)) { canPlace = false; break }
+              if (!isTeacherFree(day, slot.id, unit.teacherId)) { canPlace = false; break }
             }
             if (canPlace) {
               for (const slot of block) {
                 occupyRoom(day, slot.id, room.id)
                 occupySection(day, slot.id, unit.majorName, unit.yearLabel, unit.section)
+                occupyTeacher(day, slot.id, unit.teacherId)
                 timetable[dept][unit.majorName][unit.yearLabel][unit.section][day].push({
                   time: slot.id,
                   course: unit.course,
                   room: room.name,
+                  teacher: unit.teacherId ? teacherMap[unit.teacherId] : null,
                 })
               }
               placed = true
@@ -164,14 +183,17 @@ export function generateTimetable(config, years, rooms) {
       for (const day of preferredDays) {
         for (const slot of slots) {
           if (!isSectionFree(day, slot.id, unit.majorName, unit.yearLabel, unit.section)) continue
+          if (!isTeacherFree(day, slot.id, unit.teacherId)) continue
           for (const room of shuffle([...eligibleRooms])) {
             if (isRoomFree(day, slot.id, room.id)) {
               occupyRoom(day, slot.id, room.id)
               occupySection(day, slot.id, unit.majorName, unit.yearLabel, unit.section)
+              occupyTeacher(day, slot.id, unit.teacherId)
               timetable[dept][unit.majorName][unit.yearLabel][unit.section][day].push({
                 time: slot.id,
                 course: unit.course,
                 room: room.name,
+                teacher: unit.teacherId ? teacherMap[unit.teacherId] : null,
               })
               if (!lectureDaysUsed[usedKey]) lectureDaysUsed[usedKey] = new Set()
               lectureDaysUsed[usedKey].add(day)

@@ -286,6 +286,7 @@ function EntryCard({ entry, clash, colorClass, onDragStart, onClick }) {
     >
       <p className="font-semibold leading-tight text-[11px]">{entry.course}</p>
       {entry.room && <p className="text-[10px] opacity-60 mt-0.5 leading-tight">{entry.room}</p>}
+      {entry.teacher && <p className="text-[10px] opacity-50 mt-0.5 leading-tight italic">{entry.teacher}</p>}
     </div>
   )
 }

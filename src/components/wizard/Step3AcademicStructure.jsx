@@ -344,7 +344,7 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
       <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-2">Step 3</p>
       <h2 className="font-display text-3xl font-semibold text-white mb-1">Academic Structure</h2>
       <p className="text-slate-500 text-sm mb-8">
-        Add intake years, then majors under each year. Courses are defined per major and shared across all its sections.
+        Each section gets its own independent timetable. A 3-credit course means 3 separate sessions spread across the week — not one block. Use ⚡ Bulk Add on any major for faster entry.
       </p>
 
       <div className="space-y-4">
