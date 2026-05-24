@@ -245,8 +245,12 @@ export default function TimetablePage() {
                             ))}
                             <button
                               onClick={() => setAddModal({ day, time: slot.id })}
-                              className={`absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover/cell:opacity-100 transition-opacity text-slate-600 hover:text-slate-300 hover:bg-white/[0.08] text-sm leading-none ${entries.length === 0 ? 'inset-0 w-full h-full rounded-none' : ''}`}
-                            >+</button>
+                              className={`absolute flex items-center justify-center rounded opacity-0 group-hover/cell:opacity-100 transition-opacity text-sm leading-none
+                                ${entries.length === 0
+                                  ? 'inset-0 w-full h-full rounded-none text-slate-600 hover:text-slate-300'
+                                  : 'top-0.5 right-0.5 w-5 h-5 text-amber-600 hover:text-amber-400 hover:bg-amber-500/10'
+                                }`}
+                            >{entries.length === 0 ? '+' : '⚠'}</button>
                           </td>
                         )
                       })}
@@ -283,8 +287,14 @@ export default function TimetablePage() {
           slots={slots}
           rooms={storeRooms}
           teachers={storeTeachers.filter((t) => t.name.trim())}
+          sectionData={sectionData}
           onClose={() => setAddModal(null)}
-          onAdd={({ day, entry }) => {
+          onAdd={({ day, entry, replace, existingEntries }) => {
+            if (replace && existingEntries?.length) {
+              existingEntries.forEach((e) =>
+                deleteEntry({ dept, major: filteredMajor, yearLabel: filteredYear, section: filteredSection, day, time: e.time, course: e.course })
+              )
+            }
             addEntry({ dept, major: filteredMajor, yearLabel: filteredYear, section: filteredSection, day, entry })
             setAddModal(null)
           }}
@@ -380,13 +390,17 @@ function EditEntryModal({ entry, onClose, onSave, onDelete }) {
   )
 }
 
-function AddEntryModal({ preDay, preTime, days, slots, rooms, teachers, onClose, onAdd }) {
+function AddEntryModal({ preDay, preTime, days, slots, rooms, teachers, sectionData, onClose, onAdd }) {
   const [day, setDay] = useState(preDay || days[0] || '')
   const [slotId, setSlotId] = useState(preTime || slots[0]?.id || '')
   const [course, setCourse] = useState('')
   const [roomId, setRoomId] = useState('__custom__')
   const [customRoom, setCustomRoom] = useState('')
   const [teacherId, setTeacherId] = useState('')
+  const [replace, setReplace] = useState(true)
+
+  const existing = (sectionData?.[day] || []).filter((e) => e.time === slotId)
+  const hasTaken = existing.length > 0
 
   const selectClass = 'w-full rounded-lg border border-white/10 px-3 py-2 text-sm bg-[#0e0e18] text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all'
 
@@ -397,12 +411,9 @@ function AddEntryModal({ preDay, preTime, days, slots, rooms, teachers, onClose,
       : (rooms.find((r) => r.id === roomId)?.name || '')
     onAdd({
       day,
-      entry: {
-        time: slotId,
-        course: course.trim(),
-        room: roomName || null,
-        teacher: teachers.find((t) => t.id === teacherId)?.name || null,
-      },
+      entry: { time: slotId, course: course.trim(), room: roomName || null, teacher: teachers.find((t) => t.id === teacherId)?.name || null },
+      replace: hasTaken && replace,
+      existingEntries: existing,
     })
   }
 
@@ -413,7 +424,9 @@ function AddEntryModal({ preDay, preTime, days, slots, rooms, teachers, onClose,
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-          <Button size="sm" onClick={handleAdd} disabled={!course.trim()}>Add</Button>
+          <Button size="sm" onClick={handleAdd} disabled={!course.trim()}>
+            {hasTaken && replace ? 'Replace' : 'Add'}
+          </Button>
         </>
       }
     >
@@ -422,16 +435,48 @@ function AddEntryModal({ preDay, preTime, days, slots, rooms, teachers, onClose,
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Day</label>
             <select className={selectClass} value={day} onChange={(e) => setDay(e.target.value)}>
-              {days.map((d) => <option key={d} className="bg-[#0e0e18]">{d}</option>)}
+              {days.map((d) => (
+                <option key={d} className="bg-[#0e0e18]">{d}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Time Slot</label>
             <select className={selectClass} value={slotId} onChange={(e) => setSlotId(e.target.value)}>
-              {slots.map((s) => <option key={s.id} value={s.id} className="bg-[#0e0e18]">{s.start}–{s.end}</option>)}
+              {slots.map((s) => (
+                <option key={s.id} value={s.id} className="bg-[#0e0e18]">
+                  {s.start}–{s.end}{(sectionData?.[day] || []).some(e => e.time === s.id) ? ' ⚠' : ''}
+                </option>
+              ))}
             </select>
           </div>
         </div>
+
+        {hasTaken && (
+          <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-3 space-y-2.5">
+            <p className="text-xs font-semibold text-amber-400">This slot is occupied:</p>
+            <div className="space-y-1">
+              {existing.map((e, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs text-amber-300/80">
+                  <span className="w-1 h-1 rounded-full bg-amber-400 shrink-0" />
+                  <span className="font-medium">{e.course}</span>
+                  {e.room && <span className="text-amber-400/60">· {e.room}</span>}
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 pt-0.5">
+              <button
+                onClick={() => setReplace(true)}
+                className={`text-xs px-2.5 py-1 rounded-lg border transition ${replace ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 font-semibold' : 'border-white/10 text-slate-500 hover:border-white/20'}`}
+              >Replace existing</button>
+              <button
+                onClick={() => setReplace(false)}
+                className={`text-xs px-2.5 py-1 rounded-lg border transition ${!replace ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300 font-semibold' : 'border-white/10 text-slate-500 hover:border-white/20'}`}
+              >Add alongside</button>
+            </div>
+          </div>
+        )}
+
         <Input label="Course Name" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="e.g. Data Structures" autoFocus />
         <div>
           <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Room</label>
