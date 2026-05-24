@@ -243,12 +243,10 @@ export default function TimetablePage() {
                                 onClick={() => setEditModal({ dept, major: filteredMajor, yearLabel: filteredYear, section: filteredSection, day, entry })}
                               />
                             ))}
-                            {entries.length === 0 && (
-                              <button
-                                onClick={() => setAddModal({ day, time: slot.id })}
-                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity text-slate-700 hover:text-slate-500 text-lg leading-none"
-                              >+</button>
-                            )}
+                            <button
+                              onClick={() => setAddModal({ day, time: slot.id })}
+                              className={`absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover/cell:opacity-100 transition-opacity text-slate-600 hover:text-slate-300 hover:bg-white/[0.08] text-sm leading-none ${entries.length === 0 ? 'inset-0 w-full h-full rounded-none' : ''}`}
+                            >+</button>
                           </td>
                         )
                       })}
