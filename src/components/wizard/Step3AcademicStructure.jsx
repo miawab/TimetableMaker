@@ -10,8 +10,8 @@ function makeCourse(overrides = {}) {
   return { id: uid(), name: '', creditHours: 3, type: 'lecture', labSlots: 2, groups: [], allowedRooms: [], roomConstraint: 'free', ...overrides }
 }
 
-// ─── Bulk Add Modal ──────────────────────────────────────────────────────────
-function BulkAddModal({ onClose, onAdd }) {
+// ─── Bulk Add Courses Modal ──────────────────────────────────────────────────
+function BulkAddCoursesModal({ onClose, onAdd }) {
   const [text, setText] = useState('')
 
   const EXAMPLE = `Data Structures and Algorithms
@@ -31,9 +31,7 @@ Linear Algebra, 3, lecture`
       const creditHours = parseInt(parts[1]) || 3
       const type = (parts[2] || 'lecture').toLowerCase().includes('lab') ? 'lab' : 'lecture'
       const labSlots = type === 'lab' ? (parseInt(parts[3]) || 2) : 2
-      const groups = type === 'lab'
-        ? parts.slice(4).filter(Boolean)
-        : parts.slice(3).filter(Boolean)
+      const groups = type === 'lab' ? parts.slice(4).filter(Boolean) : parts.slice(3).filter(Boolean)
       courses.push(makeCourse({ name, creditHours, type, labSlots, groups }))
     }
     return courses
@@ -67,28 +65,23 @@ Linear Algebra, 3, lecture`
           <p className="font-mono text-slate-500">Course Name, credit hours</p>
           <p className="font-mono text-slate-500">Course Name, credit hours, lecture</p>
           <p className="font-mono text-slate-500">Course Name, credit hours, lab, lab slots, Gp-01, Gp-02</p>
-          <p className="mt-1.5 text-slate-600">Defaults: 3 credit hours, lecture type. Unspecified fields use defaults.</p>
+          <p className="mt-1.5 text-slate-600">Defaults: 3 credit hours, lecture type.</p>
         </div>
-
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="text-sm font-medium text-slate-300">Courses</label>
-            <button
-              className="text-xs text-indigo-400 hover:text-indigo-300"
-              onClick={() => setText(EXAMPLE)}
-            >
+            <button className="text-xs text-indigo-400 hover:text-indigo-300" onClick={() => setText(EXAMPLE)}>
               Load example
             </button>
           </div>
           <textarea
-            className="w-full h-48 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono bg-white/[0.04] text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 resize-none transition-all"
+            className="w-full h-48 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono bg-white/[0.04] text-slate-200 placeholder:text-white/15 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 resize-none transition-all"
             placeholder={`Data Structures and Algorithms\nDSA Lab, 1, lab, 2, Gp-01, Gp-02\nObject Oriented Programming, 3`}
             value={text}
             onChange={(e) => setText(e.target.value)}
             autoFocus
           />
         </div>
-
         {preview.length > 0 && (
           <div>
             <p className="text-xs font-medium text-slate-500 mb-1.5">Preview ({preview.length} courses)</p>
@@ -100,9 +93,83 @@ Linear Algebra, 3, lecture`
                   <span className={`px-1.5 py-0.5 rounded-full ${c.type === 'lab' ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-300'}`}>
                     {c.type}
                   </span>
-                  {c.groups.length > 0 && (
-                    <span className="text-indigo-400">{c.groups.join(', ')}</span>
-                  )}
+                  {c.groups.length > 0 && <span className="text-indigo-400">{c.groups.join(', ')}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  )
+}
+
+// ─── Bulk Add Majors Modal ───────────────────────────────────────────────────
+function BulkAddMajorsModal({ onClose, onAdd }) {
+  const [text, setText] = useState('')
+
+  function parse() {
+    const majors = []
+    for (const raw of text.split('\n')) {
+      const line = raw.trim()
+      if (!line) continue
+      const parts = line.split(/\s+/)
+      const name = parts[0].toUpperCase()
+      if (!name) continue
+      const sections = parts.slice(1).map((s) => s.toUpperCase()).filter(Boolean)
+      majors.push({ id: uid(), name, sections, courses: [] })
+    }
+    return majors
+  }
+
+  function handleAdd() {
+    const majors = parse()
+    if (majors.length) onAdd(majors)
+    onClose()
+  }
+
+  const preview = parse()
+
+  return (
+    <Modal
+      title="Bulk Add Majors"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" onClick={handleAdd} disabled={preview.length === 0}>
+            Add {preview.length > 0 ? `${preview.length} major${preview.length > 1 ? 's' : ''}` : ''}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="bg-white/[0.04] rounded-lg p-3 text-xs border border-white/10">
+          <p className="font-semibold text-slate-300 mb-1">Format — one major per line:</p>
+          <p className="font-mono text-slate-500">BSCS</p>
+          <p className="font-mono text-slate-500">BSEE A B C</p>
+          <p className="mt-1.5 text-slate-600">Sections are optional — type them after the major name separated by spaces.</p>
+        </div>
+        <div>
+          <textarea
+            className="w-full h-36 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono bg-white/[0.04] text-slate-200 placeholder:text-white/15 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 resize-none transition-all"
+            placeholder={`BSCS A B C\nBSEE A B\nBSSE`}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            autoFocus
+          />
+        </div>
+        {preview.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-slate-500 mb-1.5">Preview ({preview.length} majors)</p>
+            <div className="space-y-1 max-h-36 overflow-y-auto">
+              {preview.map((m, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs bg-indigo-500/10 text-indigo-300 px-2 py-1 rounded">
+                  <span className="font-semibold flex-1">{m.name}</span>
+                  {m.sections.length > 0
+                    ? <span className="text-indigo-400">Sections: {m.sections.join(', ')}</span>
+                    : <span className="text-slate-600 italic">no sections</span>
+                  }
                 </div>
               ))}
             </div>
@@ -131,30 +198,28 @@ function SectionAdder({ sections, onUpdate }) {
     <div className="flex items-center gap-2 flex-wrap">
       <span className="text-xs text-slate-500 font-medium shrink-0">
         Sections
-        <InfoIcon tooltip="Class sections for this major (e.g. A, B, C). Each section gets its own independent timetable. Type one or multiple separated by commas." />
+        <InfoIcon tooltip="Class sections for this major (e.g. A, B, C). Each section gets its own independent timetable. Leave empty to use a single default section A." />
         :
       </span>
       {sections.map((s) => (
         <span key={s} className="inline-flex items-center gap-1 bg-indigo-500/20 text-indigo-300 text-xs px-2 py-0.5 rounded-full font-medium">
           {s}
-          <button
-            onClick={() => onUpdate({ sections: sections.filter((x) => x !== s) })}
-            className="hover:text-red-400 leading-none ml-0.5"
-          >×</button>
+          <button onClick={() => onUpdate({ sections: sections.filter((x) => x !== s) })} className="hover:text-red-400 leading-none ml-0.5">×</button>
         </span>
       ))}
+      {sections.length === 0 && (
+        <span className="text-xs text-slate-700 italic">defaults to A</span>
+      )}
       <div className="flex items-center gap-1">
         <input
-          className="border border-dashed border-white/10 rounded-full text-xs px-2 py-0.5 w-28 bg-transparent text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50"
+          className="border border-dashed border-white/10 rounded-full text-xs px-2 py-0.5 w-28 bg-transparent text-slate-300 placeholder:text-white/15 focus:outline-none focus:border-indigo-500/50"
           placeholder="A, B, C or just A"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') addSections() }}
         />
         {input && (
-          <button onClick={addSections} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
-            Add
-          </button>
+          <button onClick={addSections} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">Add</button>
         )}
       </div>
     </div>
@@ -167,7 +232,7 @@ function CourseRow({ course, onUpdate, onRemove }) {
     <tr className="hover:bg-white/[0.03] group">
       <td className="px-2 py-1.5">
         <input
-          className="w-full text-sm border-0 bg-transparent text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/40 rounded px-1"
+          className="w-full text-sm border-0 bg-transparent text-slate-200 placeholder:text-white/15 focus:outline-none focus:ring-1 focus:ring-indigo-500/40 rounded px-1"
           value={course.name}
           onChange={(e) => onUpdate({ name: e.target.value })}
           placeholder="e.g. Data Structures"
@@ -205,7 +270,7 @@ function CourseRow({ course, onUpdate, onRemove }) {
       </td>
       <td className="px-2 py-1.5">
         <input
-          className="w-full text-sm border-0 bg-transparent text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/40 rounded px-1"
+          className="w-full text-sm border-0 bg-transparent text-slate-200 placeholder:text-white/15 focus:outline-none focus:ring-1 focus:ring-indigo-500/40 rounded px-1"
           value={(course.groups || []).join(', ')}
           onChange={(e) =>
             onUpdate({ groups: e.target.value.split(',').map((g) => g.trim()).filter(Boolean) })
@@ -214,10 +279,7 @@ function CourseRow({ course, onUpdate, onRemove }) {
         />
       </td>
       <td className="px-2 py-1.5 w-8">
-        <button
-          onClick={onRemove}
-          className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition text-lg leading-none"
-        >×</button>
+        <button onClick={onRemove} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition text-lg leading-none">×</button>
       </td>
     </tr>
   )
@@ -226,7 +288,7 @@ function CourseRow({ course, onUpdate, onRemove }) {
 // ─── Major block ─────────────────────────────────────────────────────────────
 function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse, removeCourse }) {
   const [open, setOpen] = useState(true)
-  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkCoursesOpen, setBulkCoursesOpen] = useState(false)
 
   function handleBulkAdd(courses) {
     courses.forEach((c) => addCourse(yearId, major.id, c))
@@ -234,7 +296,6 @@ function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse
 
   return (
     <div className="border border-white/[0.07] rounded-xl overflow-hidden">
-      {/* Major header */}
       <div className="bg-white/[0.03] px-4 py-3 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -243,7 +304,7 @@ function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse
               className={`transition-transform text-slate-500 text-xs ${open ? 'rotate-90' : ''}`}
             >▶</button>
             <input
-              className="bg-white/[0.06] border border-white/10 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 rounded-lg px-2 py-1 font-semibold text-sm text-white w-32 uppercase"
+              className="bg-white/[0.06] border border-white/10 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 rounded-lg px-2 py-1 font-semibold text-sm text-white w-32 uppercase placeholder:text-white/15"
               value={major.name}
               onChange={(e) => onUpdate({ name: e.target.value.toUpperCase() })}
               placeholder="e.g. BSCS"
@@ -255,7 +316,6 @@ function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse
         <SectionAdder sections={major.sections || []} onUpdate={onUpdate} />
       </div>
 
-      {/* Course table */}
       {open && (
         <div className="p-3">
           {(major.courses || []).length === 0 ? (
@@ -294,7 +354,6 @@ function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse
               </tbody>
             </table>
           )}
-
           <div className="mt-2 flex items-center gap-3">
             <button
               onClick={() => addCourse(yearId, major.id, makeCourse())}
@@ -303,7 +362,7 @@ function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse
               + Add Course
             </button>
             <button
-              onClick={() => setBulkOpen(true)}
+              onClick={() => setBulkCoursesOpen(true)}
               className="text-xs text-slate-500 hover:text-indigo-400 font-medium flex items-center gap-1 border border-white/10 rounded-lg px-2 py-1 hover:border-indigo-500/30 transition"
             >
               ⚡ Bulk Add
@@ -312,8 +371,8 @@ function MajorBlock({ major, yearId, onUpdate, onRemove, addCourse, updateCourse
         </div>
       )}
 
-      {bulkOpen && (
-        <BulkAddModal onClose={() => setBulkOpen(false)} onAdd={handleBulkAdd} />
+      {bulkCoursesOpen && (
+        <BulkAddCoursesModal onClose={() => setBulkCoursesOpen(false)} onAdd={handleBulkAdd} />
       )}
     </div>
   )
@@ -332,11 +391,35 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
   const updateCourse = useAppStore((s) => s.updateCourse)
   const removeCourse = useAppStore((s) => s.removeCourse)
   const [openYears, setOpenYears] = useState({})
+  const [bulkMajorsYearId, setBulkMajorsYearId] = useState(null)
+  const [warnEmpty, setWarnEmpty] = useState(false)
 
   function handleAddYear() {
     const id = uid()
     addYear({ id, intake: '', label: '', majors: [] })
     setOpenYears((p) => ({ ...p, [id]: true }))
+  }
+
+  function checkEmptyFields() {
+    for (const year of years) {
+      if (!year.intake.trim() || !year.label.trim()) return true
+      for (const major of year.majors || []) {
+        if (!major.name.trim()) return true
+        for (const course of major.courses || []) {
+          if (!course.name.trim()) return true
+        }
+      }
+    }
+    return false
+  }
+
+  function handleNext() {
+    if (checkEmptyFields() && !warnEmpty) {
+      setWarnEmpty(true)
+      return
+    }
+    setWarnEmpty(false)
+    onNext()
   }
 
   return (
@@ -352,7 +435,6 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
           const isOpen = openYears[year.id] !== false
           return (
             <div key={year.id} className="bg-[#0e0e18] rounded-2xl border border-white/[0.07] overflow-hidden">
-              {/* Year header */}
               <div className="flex items-center gap-3 px-5 py-3 bg-indigo-500/10 border-b border-indigo-500/20">
                 <button
                   onClick={() => setOpenYears((p) => ({ ...p, [year.id]: !isOpen }))}
@@ -365,7 +447,7 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
                       <InfoIcon tooltip="The batch identifier used in the timetable header, e.g. 2K25 for the batch that joined in 2025." />
                     </label>
                     <input
-                      className="border border-indigo-500/30 rounded-lg px-2 py-1 text-sm font-mono text-white bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-indigo-500/30 w-20"
+                      className="border border-indigo-500/30 rounded-lg px-2 py-1 text-sm font-mono text-white bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-indigo-500/30 w-20 placeholder:text-white/15"
                       value={year.intake}
                       onChange={(e) => updateYear(year.id, { intake: e.target.value.toUpperCase() })}
                       placeholder="2K25"
@@ -377,7 +459,7 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
                       <InfoIcon tooltip="Human-readable label for this cohort, e.g. Year 1 – Freshman. Used as a display heading in the timetable." />
                     </label>
                     <input
-                      className="border border-indigo-500/30 rounded-lg px-2 py-1 text-sm text-white flex-1 bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                      className="border border-indigo-500/30 rounded-lg px-2 py-1 text-sm text-white flex-1 bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-indigo-500/30 placeholder:text-white/15"
                       value={year.label}
                       onChange={(e) => updateYear(year.id, { label: e.target.value })}
                       placeholder="Year 1 – Freshman"
@@ -401,12 +483,20 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
                       removeCourse={removeCourse}
                     />
                   ))}
-                  <button
-                    onClick={() => addMajor(year.id, { id: uid(), name: '', sections: [], courses: [] })}
-                    className="text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 border border-dashed border-indigo-500/30 rounded-xl px-4 py-2 w-full justify-center hover:bg-indigo-500/10 transition"
-                  >
-                    + Add Major
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => addMajor(year.id, { id: uid(), name: '', sections: [], courses: [] })}
+                      className="flex-1 text-sm text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 border border-dashed border-indigo-500/30 rounded-xl px-4 py-2 justify-center hover:bg-indigo-500/10 transition"
+                    >
+                      + Add Major
+                    </button>
+                    <button
+                      onClick={() => setBulkMajorsYearId(year.id)}
+                      className="text-xs text-slate-500 hover:text-indigo-400 font-medium flex items-center gap-1.5 border border-white/10 rounded-xl px-3 py-2 hover:border-indigo-500/30 transition"
+                    >
+                      ⚡ Bulk Add Majors
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -421,12 +511,25 @@ export default function Step3AcademicStructure({ onNext, onBack }) {
         </button>
       </div>
 
-      <div className="mt-6 flex justify-between">
+      {warnEmpty && (
+        <div className="mt-5 bg-amber-900/10 border border-amber-400/20 rounded-xl px-4 py-3 text-sm text-amber-400/80">
+          Some fields are still empty (intake code, year label, major name, or course name). These will be blank on the timetable.
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-between">
         <Button variant="secondary" onClick={onBack}>← Back</Button>
-        <Button onClick={onNext} disabled={years.length === 0}>
-          Next: Rooms →
+        <Button onClick={handleNext} disabled={years.length === 0}>
+          {warnEmpty ? 'Proceed Anyway →' : 'Next: Teachers →'}
         </Button>
       </div>
+
+      {bulkMajorsYearId && (
+        <BulkAddMajorsModal
+          onClose={() => setBulkMajorsYearId(null)}
+          onAdd={(majors) => majors.forEach((m) => addMajor(bulkMajorsYearId, m))}
+        />
+      )}
     </div>
   )
 }

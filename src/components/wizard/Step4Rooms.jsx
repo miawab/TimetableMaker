@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import Button from '../common/Button'
 import { InfoIcon } from '../common/Tooltip'
@@ -15,6 +16,7 @@ export default function Step4Rooms({ onNext, onBack }) {
   const addRoom = useAppStore((s) => s.addRoom)
   const updateRoom = useAppStore((s) => s.updateRoom)
   const removeRoom = useAppStore((s) => s.removeRoom)
+  const [warnEmpty, setWarnEmpty] = useState(false)
 
   const classrooms = rooms.filter((r) => r.type === 'classroom')
   const labs = rooms.filter((r) => r.type === 'lab')
@@ -46,7 +48,7 @@ export default function Step4Rooms({ onNext, onBack }) {
               <tr key={room.id} className="hover:bg-white/[0.03] group border-b border-white/[0.04]">
                 <td className="px-4 py-2">
                   <input
-                    className="w-full text-sm border-0 bg-transparent text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/40 rounded px-1"
+                    className="w-full text-sm border-0 bg-transparent text-slate-200 placeholder:text-white/15 focus:outline-none focus:ring-1 focus:ring-indigo-500/40 rounded px-1"
                     value={room.name}
                     onChange={(e) => updateRoom(room.id, { name: e.target.value })}
                     placeholder="e.g. CR-14-UG Block"
@@ -95,10 +97,24 @@ export default function Step4Rooms({ onNext, onBack }) {
         </div>
       )}
 
-      <div className="mt-6 flex justify-between">
+      {warnEmpty && (
+        <div className="mt-5 bg-amber-900/10 border border-amber-400/20 rounded-xl px-4 py-3 text-sm text-amber-400/80">
+          Some rooms have no name — they'll appear blank on the timetable.
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-between">
         <Button variant="secondary" onClick={onBack}>← Back</Button>
-        <Button onClick={onNext} disabled={rooms.length === 0}>
-          Next: Pairings →
+        <Button
+          onClick={() => {
+            const hasEmpty = rooms.some((r) => !r.name.trim())
+            if (hasEmpty && !warnEmpty) { setWarnEmpty(true); return }
+            setWarnEmpty(false)
+            onNext()
+          }}
+          disabled={rooms.length === 0}
+        >
+          {warnEmpty ? 'Proceed Anyway →' : 'Next: Pairings →'}
         </Button>
       </div>
     </div>

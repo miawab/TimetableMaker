@@ -125,6 +125,17 @@ const storeSlice = (set, get) => ({
   // Timetable (set by generator or import)
   setTimetable: (timetable) => set({ timetable }),
 
+  addEntry: ({ dept, major, yearLabel, section, day, entry }) =>
+    set((s) => {
+      if (!s.timetable) return s
+      const t = JSON.parse(JSON.stringify(s.timetable))
+      if (!t[dept]?.[major]?.[yearLabel]?.[section]) return s
+      if (!t[dept][major][yearLabel][section][day]) t[dept][major][yearLabel][section][day] = []
+      t[dept][major][yearLabel][section][day].push(entry)
+      t[dept][major][yearLabel][section][day].sort((a, b) => a.time.localeCompare(b.time))
+      return { timetable: t }
+    }),
+
   // Move a slot (for drag/drop editing)
   moveEntry: ({ dept, major, yearLabel, section, fromDay, toDay, fromTime, toTime, entry }) =>
     set((s) => {

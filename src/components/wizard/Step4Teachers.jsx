@@ -15,7 +15,7 @@ function TeacherRow({ teacher, autoFocus, onUpdate, onRemove }) {
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors duration-150 ${named ? 'bg-indigo-400' : 'bg-white/20'}`} />
       <input
         autoFocus={autoFocus}
-        className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 focus:outline-none"
+        className="flex-1 bg-transparent text-sm text-white placeholder:text-white/15 focus:outline-none"
         value={teacher.name}
         onChange={(e) => onUpdate({ name: e.target.value })}
         onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }}

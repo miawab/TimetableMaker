@@ -24,10 +24,14 @@ export default function TimetablePage() {
   const updateEntry = useAppStore((s) => s.updateEntry)
   const deleteEntry = useAppStore((s) => s.deleteEntry)
   const moveEntry = useAppStore((s) => s.moveEntry)
+  const addEntry = useAppStore((s) => s.addEntry)
+  const storeRooms = useAppStore((s) => s.rooms)
+  const storeTeachers = useAppStore((s) => s.teachers)
   const temporal = useTemporal()
 
   const [filter, setFilter] = useState({ major: '', year: '', section: '' })
   const [editModal, setEditModal] = useState(null)
+  const [addModal, setAddModal] = useState(null)
   const [dragInfo, setDragInfo] = useState(null)
   const [clashReport, setClashReport] = useState(false)
 
@@ -174,6 +178,8 @@ export default function TimetablePage() {
             <Button size="sm" variant="secondary" onClick={exportJSON}>JSON</Button>
             <Button size="sm" variant="secondary" onClick={() => exportXlsx(timetable, config)}>XLSX</Button>
             <div className="w-px h-4 bg-white/10 mx-0.5" />
+            <Button size="sm" variant="secondary" onClick={() => setAddModal({})}>+ Add Class</Button>
+            <div className="w-px h-4 bg-white/10 mx-0.5" />
             <Button size="sm" variant="ghost" onClick={() => navigate('/setup')}>Setup</Button>
             <Button size="sm" onClick={() => navigate('/generate')}>Regenerate</Button>
           </div>
@@ -222,7 +228,7 @@ export default function TimetablePage() {
                         return (
                           <td
                             key={day}
-                            className="border border-white/[0.07] p-1.5 align-top relative bg-[#06060a] group-hover:bg-white/[0.01] transition-colors"
+                            className="border border-white/[0.07] p-1.5 align-top relative bg-[#06060a] group-hover:bg-white/[0.01] transition-colors group/cell"
                             style={{ minHeight: '3.5rem' }}
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, { day, time: slot.id })}
@@ -237,6 +243,12 @@ export default function TimetablePage() {
                                 onClick={() => setEditModal({ dept, major: filteredMajor, yearLabel: filteredYear, section: filteredSection, day, entry })}
                               />
                             ))}
+                            {entries.length === 0 && (
+                              <button
+                                onClick={() => setAddModal({ day, time: slot.id })}
+                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity text-slate-700 hover:text-slate-500 text-lg leading-none"
+                              >+</button>
+                            )}
                           </td>
                         )
                       })}
@@ -261,6 +273,22 @@ export default function TimetablePage() {
           onDelete={() => {
             deleteEntry({ ...editModal, time: editModal.entry.time, course: editModal.entry.course })
             setEditModal(null)
+          }}
+        />
+      )}
+
+      {addModal !== null && (
+        <AddEntryModal
+          preDay={addModal.day}
+          preTime={addModal.time}
+          days={days}
+          slots={slots}
+          rooms={storeRooms}
+          teachers={storeTeachers.filter((t) => t.name.trim())}
+          onClose={() => setAddModal(null)}
+          onAdd={({ day, entry }) => {
+            addEntry({ dept, major: filteredMajor, yearLabel: filteredYear, section: filteredSection, day, entry })
+            setAddModal(null)
           }}
         />
       )}
@@ -349,6 +377,83 @@ function EditEntryModal({ entry, onClose, onSave, onDelete }) {
         <p className="text-[11px] text-slate-500 font-mono">{entry.time}</p>
         <Input label="Course Name" value={course} onChange={(e) => setCourse(e.target.value)} />
         <Input label="Room" value={room} onChange={(e) => setRoom(e.target.value)} placeholder="e.g. CR-14-UG Block" />
+      </div>
+    </Modal>
+  )
+}
+
+function AddEntryModal({ preDay, preTime, days, slots, rooms, teachers, onClose, onAdd }) {
+  const [day, setDay] = useState(preDay || days[0] || '')
+  const [slotId, setSlotId] = useState(preTime || slots[0]?.id || '')
+  const [course, setCourse] = useState('')
+  const [roomId, setRoomId] = useState('__custom__')
+  const [customRoom, setCustomRoom] = useState('')
+  const [teacherId, setTeacherId] = useState('')
+
+  const selectClass = 'w-full rounded-lg border border-white/10 px-3 py-2 text-sm bg-[#0e0e18] text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/60 transition-all'
+
+  function handleAdd() {
+    if (!course.trim()) return
+    const roomName = roomId === '__custom__'
+      ? customRoom.trim()
+      : (rooms.find((r) => r.id === roomId)?.name || '')
+    onAdd({
+      day,
+      entry: {
+        time: slotId,
+        course: course.trim(),
+        room: roomName || null,
+        teacher: teachers.find((t) => t.id === teacherId)?.name || null,
+      },
+    })
+  }
+
+  return (
+    <Modal
+      title="Add Class"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+          <Button size="sm" onClick={handleAdd} disabled={!course.trim()}>Add</Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Day</label>
+            <select className={selectClass} value={day} onChange={(e) => setDay(e.target.value)}>
+              {days.map((d) => <option key={d} className="bg-[#0e0e18]">{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Time Slot</label>
+            <select className={selectClass} value={slotId} onChange={(e) => setSlotId(e.target.value)}>
+              {slots.map((s) => <option key={s.id} value={s.id} className="bg-[#0e0e18]">{s.start}–{s.end}</option>)}
+            </select>
+          </div>
+        </div>
+        <Input label="Course Name" value={course} onChange={(e) => setCourse(e.target.value)} placeholder="e.g. Data Structures" autoFocus />
+        <div>
+          <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Room</label>
+          <select className={selectClass} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+            <option value="__custom__" className="bg-[#0e0e18]">Custom…</option>
+            {rooms.map((r) => <option key={r.id} value={r.id} className="bg-[#0e0e18]">{r.name}</option>)}
+          </select>
+          {roomId === '__custom__' && (
+            <Input className="mt-2" value={customRoom} onChange={(e) => setCustomRoom(e.target.value)} placeholder="Room name or leave blank" />
+          )}
+        </div>
+        {teachers.length > 0 && (
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Teacher</label>
+            <select className={selectClass} value={teacherId} onChange={(e) => setTeacherId(e.target.value)}>
+              <option value="" className="bg-[#0e0e18]">No teacher</option>
+              {teachers.map((t) => <option key={t.id} value={t.id} className="bg-[#0e0e18]">{t.name}</option>)}
+            </select>
+          </div>
+        )}
       </div>
     </Modal>
   )

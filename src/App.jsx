@@ -9,7 +9,11 @@ import ImportPage from './pages/ImportPage'
 import LoadingScreen from './components/LoadingScreen'
 
 export default function App() {
-  const [entered, setEntered] = useState(false)
+  // Skip splash when reloading directly on a non-setup page (e.g. /timetable)
+  const [entered, setEntered] = useState(() => {
+    const p = window.location.pathname
+    return p !== '/' && p !== '/setup'
+  })
   const setWizardStep = useAppStore((s) => s.setWizardStep)
   const navigate = useNavigate()
 

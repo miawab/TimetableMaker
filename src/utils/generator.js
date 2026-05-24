@@ -25,7 +25,7 @@ export function generateTimetable(config, years, rooms, teachers = []) {
     for (const major of year.majors || []) {
       if (!timetable[dept][major.name]) timetable[dept][major.name] = {}
       if (!timetable[dept][major.name][yearLabel]) timetable[dept][major.name][yearLabel] = {}
-      for (const section of major.sections || []) {
+      for (const section of (major.sections?.length ? major.sections : ['A'])) {
         timetable[dept][major.name][yearLabel][section] = {}
         for (const day of days) {
           timetable[dept][major.name][yearLabel][section][day] = []
@@ -41,7 +41,7 @@ export function generateTimetable(config, years, rooms, teachers = []) {
     for (const major of year.majors || []) {
       for (const course of major.courses || []) {
         const groups = course.groups?.length ? course.groups : [null]
-        for (const section of major.sections || []) {
+        for (const section of (major.sections?.length ? major.sections : ['A'])) {
           for (const group of groups) {
             if (course.type === 'lab') {
               units.push({
